@@ -15,9 +15,15 @@ The `github.com/talut/dotenv` package is a Go library for managing environment v
 - `MustGetFloat(key string) float64`: Retrieves the value of the environment variable named by the key. If the value is not set or cannot be parsed as a float, a panic occurs.
 - `MustGetDuration(key string) time.Duration`: Retrieves the value of the environment variable named by the key. If the value is not set or cannot be parsed as a duration, a panic occurs.
 
+
+## Installation
+```shell
+go get github.com/talut/dotenv
+```
+
 ## Usage
 
-Import the `dotenv` package into your Go code using the following import statement:
+Import the `import "github.com/talut/dotenv"` package into your Go code using the following import statement:
 
 ```go
  import "github.com/talut/dotenv"
