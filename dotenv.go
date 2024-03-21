@@ -12,6 +12,11 @@ import (
 // This is used to avoid repeated lookups of environment variables, which can be expensive.
 var cache = make(map[string]string)
 
+// ClearCache clears the cache of environment variables.
+func ClearCache() {
+	cache = make(map[string]string)
+}
+
 // GetString retrieves the value of the environment variable named by the key.
 // If the value is not set, the fallback value is returned.
 // The value is cached to avoid repeated lookups.
