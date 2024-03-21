@@ -129,3 +129,14 @@ func TestFunctions(t *testing.T) {
 		t.Run(tt.name, tt.testFunc)
 	}
 }
+
+func TestClearCache(t *testing.T) {
+	os.Setenv("TEST_ENV_VAR", "test_value")
+	val := GetString("TEST_ENV_VAR", "")
+	require.Equal(t, "test_value", val)
+	ClearCache()
+	os.Setenv("TEST_ENV_VAR", "new_value")
+	val = GetString("TEST_ENV_VAR", "")
+	require.Equal(t, "new_value", val)
+	os.Unsetenv("TEST_ENV_VAR")
+}
