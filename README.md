@@ -3,8 +3,9 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/talut/dotenv.svg)](https://pkg.go.dev/github.com/talut/dotenv)
 [![Go Report Card](https://goreportcard.com/badge/github.com/talut/dotenv)](https://goreportcard.com/report/github.com/talut/dotenv)
 [![License](https://img.shields.io/github/license/talut/dotenv)](LICENSE)
+[![codecov](https://codecov.io/gh/talut/dotenv/graph/badge.svg?token=UU6H7WZI44)](https://codecov.io/gh/talut/dotenv)
 
-The `github.com/talut/dotenv` package is a Go library for managing environment variables. It provides a set of functions
+`dotenv` Go library for managing environment variables. It provides a set of functions
 to retrieve environment variables with different types, including string, boolean, integer, float, and duration. It also
 includes "Must" versions of these functions that panic if the environment variable is not set or cannot be parsed
 correctly.
