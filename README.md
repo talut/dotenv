@@ -14,7 +14,7 @@ correctly.
 
 - `ClearCache()`: Clears the cache of environment variables.
 - `GetString(key, fallback string) string`: Retrieves the value of the environment variable named by the key. If the
-  value is not set, the fallback value is returned.
+  value is not set, the fallback value is retur ned.
 - `GetBool(key string, fallback bool) bool`: Retrieves the value of the environment variable named by the key. If the
   value is not set or cannot be parsed as a boolean, the fallback value is returned.
 - `GetInt(key string, fallback int) int`: Retrieves the value of the environment variable named by the key. If the value
@@ -44,7 +44,32 @@ go get github.com/talut/dotenv
 
 Import the `import "github.com/talut/dotenv"` package into your Go code using the following import statement:
 
-Mote: The second parameters in the Get functions are fallback values that will be used
+In addition to accessing environment variables that are already set, you can also load environment variables from `.env`
+files.
+
+#### Loading from Default .env File
+
+```go
+// Load from default .env file
+err := dotenv.Load()
+if err != nil {
+log.Fatal("Error loading .env file")
+}
+
+// Load from a specific environment file
+err := dotenv.Load(".env.development")
+if err != nil {
+log.Fatal("Error loading environment file")
+}
+
+// Load multiple files in order (later files override earlier ones)
+err := dotenv.Load(".env", ".env.local")
+if err != nil {
+log.Fatal("Error loading environment files")
+}
+```
+
+Note: The second parameters in the Get functions are fallback values that will be used
 if the environment variable is not set. The MustGet functions will panic if the environment variable is not set or
 cannot be parsed correctly.
 
@@ -93,11 +118,6 @@ func main() {
 	dotenv.ClearCache()
 }
 ```
-
-Please replace `"STRING_ENV_VAR", "BOOL_ENV_VAR", "INT_ENV_VAR", "FLOAT_ENV_VAR", "DURATION_ENV_VAR", "
-MUST_STRING_ENV_VAR", "MUST_BOOL_ENV_VAR", "MUST_INT_ENV_VAR", "MUST_FLOAT_ENV_VAR", and "MUST_DURATION_ENV_VAR"` with
-your actual environment variable names.
-
 
 ## License
 

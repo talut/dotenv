@@ -13,6 +13,142 @@ func setupEnv(key, value string) func() {
 	}
 }
 
+func TestLoad(t *testing.T) {
+	// Create temporary .env files for testing
+	defaultEnvContent := []byte("DEFAULT_VAR=default_value\nSHARED_VAR=from_default")
+	customEnvContent := []byte("CUSTOM_VAR=custom_value\nSHARED_VAR=from_custom")
+
+	// Write default .env file
+	err := os.WriteFile(".env", defaultEnvContent, 0644)
+	require.NoError(t, err)
+	defer os.Remove(".env")
+
+	// Write custom .env file
+	customEnvPath := ".env.custom"
+	err = os.WriteFile(customEnvPath, customEnvContent, 0644)
+	require.NoError(t, err)
+	defer os.Remove(customEnvPath)
+
+	// Test 1: Load default .env
+	t.Run("Load default .env file", func(t *testing.T) {
+		// Clear environment and cache first
+		os.Unsetenv("DEFAULT_VAR")
+		os.Unsetenv("SHARED_VAR")
+		ClearCache()
+
+		err := Load()
+		require.NoError(t, err)
+
+		// Check environment variables are set
+		val := os.Getenv("DEFAULT_VAR")
+		require.Equal(t, "default_value", val)
+
+		sharedVal := os.Getenv("SHARED_VAR")
+		require.Equal(t, "from_default", sharedVal)
+
+		// Check cache is populated
+		cachedVal, exists := cache["DEFAULT_VAR"]
+		require.True(t, exists)
+		require.Equal(t, "default_value", cachedVal)
+	})
+
+	// Test 2: Load custom .env file
+	t.Run("Load custom .env file", func(t *testing.T) {
+		// Clear environment and cache first
+		os.Unsetenv("DEFAULT_VAR")
+		os.Unsetenv("CUSTOM_VAR")
+		os.Unsetenv("SHARED_VAR")
+		ClearCache()
+
+		err := Load(customEnvPath)
+		require.NoError(t, err)
+
+		// Check custom environment variable
+		val := os.Getenv("CUSTOM_VAR")
+		require.Equal(t, "custom_value", val)
+
+		// Check default env var doesn't exist
+		defaultVal := os.Getenv("DEFAULT_VAR")
+		require.Equal(t, "", defaultVal)
+
+		// Check cache is populated correctly
+		cachedVal, exists := cache["CUSTOM_VAR"]
+		require.True(t, exists)
+		require.Equal(t, "custom_value", cachedVal)
+	})
+
+	// Test 3: Load multiple .env files
+	t.Run("Load multiple .env files", func(t *testing.T) {
+		// Clear environment and cache first
+		os.Unsetenv("DEFAULT_VAR")
+		os.Unsetenv("CUSTOM_VAR")
+		os.Unsetenv("SHARED_VAR")
+		ClearCache()
+
+		err := Load(".env", customEnvPath)
+		require.NoError(t, err)
+
+		// Both files' unique vars should be loaded
+		defaultVal := os.Getenv("DEFAULT_VAR")
+		require.Equal(t, "default_value", defaultVal)
+
+		customVal := os.Getenv("CUSTOM_VAR")
+		require.Equal(t, "custom_value", customVal)
+
+		// Shared var should have value from last file loaded
+		sharedVal := os.Getenv("SHARED_VAR")
+		require.Equal(t, "from_custom", sharedVal)
+
+		// Check cache is populated correctly
+		cachedDefault, exists := cache["DEFAULT_VAR"]
+		require.True(t, exists)
+		require.Equal(t, "default_value", cachedDefault)
+
+		cachedShared, exists := cache["SHARED_VAR"]
+		require.True(t, exists)
+		require.Equal(t, "from_custom", cachedShared)
+	})
+
+	// Test 4: Non-existent file
+	t.Run("Non-existent file", func(t *testing.T) {
+		ClearCache()
+		err := Load("non_existent_file.env")
+		require.NoError(t, err) // Should not error for non-existent files
+	})
+
+	// Test 5: Test quoting in .env file
+	t.Run("Test quotes in .env file", func(t *testing.T) {
+		quotedEnvContent := []byte(`
+QUOTED_DOUBLE="double quoted value"
+QUOTED_SINGLE='single quoted value'
+QUOTED_NESTED="'nested quotes'"
+`)
+		quotedEnvPath := ".env.quoted"
+		err = os.WriteFile(quotedEnvPath, quotedEnvContent, 0644)
+		require.NoError(t, err)
+		defer os.Remove(quotedEnvPath)
+
+		ClearCache()
+		err := Load(quotedEnvPath)
+		require.NoError(t, err)
+
+		// Check that quotes are properly removed
+		doubleVal := os.Getenv("QUOTED_DOUBLE")
+		require.Equal(t, "double quoted value", doubleVal)
+
+		singleVal := os.Getenv("QUOTED_SINGLE")
+		require.Equal(t, "single quoted value", singleVal)
+
+		nestedVal := os.Getenv("QUOTED_NESTED")
+		require.Equal(t, "'nested quotes'", nestedVal)
+
+		// Check cache
+		cachedVal, exists := cache["QUOTED_DOUBLE"]
+		require.True(t, exists)
+		require.Equal(t, "double quoted value", cachedVal)
+	})
+}
+
 func TestFunctions(t *testing.T) {
 	tests := []struct {
 		name     string
