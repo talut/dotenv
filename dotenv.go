@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,6 +16,58 @@ var cache = make(map[string]string)
 // ClearCache clears the cache of environment variables.
 func ClearCache() {
 	cache = make(map[string]string)
+}
+
+// Load loads environment variables from one or more .env files.
+// Files are loaded in the order provided. If a key exists in multiple files,
+// the value from the last file will be used.
+// If no filenames are provided, it attempts to load from the default ".env" file.
+// Files that don't exist are skipped without error.
+func Load(filenames ...string) error {
+	if len(filenames) == 0 {
+		filenames = []string{".env"}
+	}
+
+	for _, filename := range filenames {
+		_, err := os.Stat(filename)
+		if os.IsNotExist(err) {
+			continue
+		}
+		contents, err := os.ReadFile(filename)
+		if err != nil {
+			return err
+		}
+
+		lines := strings.Split(string(contents), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			idx := strings.Index(line, "=")
+			if idx == -1 {
+				continue // Skip lines without equals sign
+			}
+			key := strings.TrimSpace(line[:idx])
+			value := ""
+			if idx+1 < len(line) {
+				value = strings.TrimSpace(line[idx+1:])
+			}
+			if len(value) > 1 {
+				if (value[0] == '"' && value[len(value)-1] == '"') ||
+					(value[0] == '\'' && value[len(value)-1] == '\'') {
+					value = value[1 : len(value)-1]
+				}
+			}
+
+			if err := os.Setenv(key, value); err != nil {
+				return err
+			}
+		}
+	}
+	ClearCache()
+
+	return nil
 }
 
 // GetString retrieves the value of the environment variable named by the key.
