@@ -27,6 +27,7 @@ func Load(filenames ...string) error {
 	if len(filenames) == 0 {
 		filenames = []string{".env"}
 	}
+	ClearCache()
 
 	for _, filename := range filenames {
 		_, err := os.Stat(filename)
@@ -37,7 +38,6 @@ func Load(filenames ...string) error {
 		if err != nil {
 			return err
 		}
-
 		lines := strings.Split(string(contents), "\n")
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
@@ -59,13 +59,12 @@ func Load(filenames ...string) error {
 					value = value[1 : len(value)-1]
 				}
 			}
-
 			if err := os.Setenv(key, value); err != nil {
 				return err
 			}
+			cache[key] = value
 		}
 	}
-	ClearCache()
 
 	return nil
 }
